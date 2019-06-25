@@ -5,7 +5,7 @@
 
 3. run master node `./server -port=1111`
 4. run additional node `./server -port=2222 -nodeIp=127.0.0.1 -nodePort=1111`
-5. run client `.\client.exe node="127.0.0.1:2222"`
+5. run client `.\client.exe -node="127.0.0.1:2222"`
    
 Available commands
    
