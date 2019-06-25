@@ -9,6 +9,7 @@ import (
 	"net"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -26,6 +27,8 @@ type storageValue struct {
 
 var nodes = map[string]node{}
 var storage = map[string]storageValue{}
+
+var mtx sync.Mutex
 
 func main() {
 
@@ -85,8 +88,9 @@ func main() {
 					}():
 						var exp = regexp.MustCompile(`GET KEY (\w+)`)
 						key := exp.FindStringSubmatch(message)
-
+						mtx.Lock()
 						response = []byte(storage[key[1]].Value)
+						mtx.Unlock()
 						if err != nil {
 							log.Fatal(err)
 						}
@@ -96,16 +100,20 @@ func main() {
 					}():
 						var exp = regexp.MustCompile(`SET KEY (\w+) (\w+)`)
 						key := exp.FindStringSubmatch(message)
+						mtx.Lock()
 						storage[key[1]] = storageValue{
 							Value: key[2],
 							Time:  time.Now(),
 						}
+						mtx.Unlock()
 						response = []byte("Done")
 						if err != nil {
 							log.Fatal(err)
 						}
 					case message == "GET KEYS":
+						mtx.Lock()
 						response, err = json.Marshal(storage)
+						mtx.Unlock()
 						if err != nil {
 							log.Fatal(err)
 						}
